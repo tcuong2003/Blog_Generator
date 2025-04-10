@@ -46,7 +46,7 @@ Cài đặt và chạy: (mở terminal trong dự án và cd đến dự án)
 - python manage.py runserver
 
 6. Truy cập website:
-- Trình duyệt: http://127.0.0.1:8000/\
+- Trình duyệt: http://127.0.0.1:8000/
 
 7. Tạo tài khoản 
 - user nếu bạn chưa có (tạo tài khoản trên giao diện signup)
