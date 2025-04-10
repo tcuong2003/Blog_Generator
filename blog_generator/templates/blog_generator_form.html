@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        /* Hiệu ứng gradient nền */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Cấu hình nền động */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #6b8dd6, #8e37d7);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            z-index: -1;
+        }
+
+        /* Hiệu ứng loading */
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .load {
+            width: 100px;
+            height: 100px;
+            margin: 110px auto 0;
+            border:solid 10px #8822aa;
+            border-radius: 50%;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+             -webkit-transition: all 0.5s ease-in;
+            -webkit-animation-name:             rotate; 
+            -webkit-animation-duration:         1.0s; 
+            -webkit-animation-iteration-count:  infinite;
+            -webkit-animation-timing-function: linear;
+                
+                 transition: all 0.5s ease-in;
+            animation-name:             rotate; 
+            animation-duration:         1.0s; 
+            animation-iteration-count:  infinite;
+            animation-timing-function: linear; 
+        }
+
+        /* Hiệu ứng hover nút thành block */
+        .hover-block:hover {
+            display: block;
+        }
+    </style>
+
+<div class="flex flex-col min-h-screen font-sans antialiased">
+
+    <!-- Nền động -->
+    <div id="particles-js"></div>
+
+    <!-- Main Content -->
+    <div class="flex-grow container mx-auto mt-20 px-4 sm:px-0">
+        <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex flex-col">
+
+            <!-- Introduction section -->
+            <div class="text-center">
+                <h2 class="text-2xl font-semibold mb-4">Welcome to the AI Blog Generator</h2>
+                <p class="text-gray-700">
+                    Tạo các bài viết blog chất lượng cao từ video YouTube bằng trí tuệ nhân tạo. Chỉ cần nhập liên kết đến video YouTube bên dưới và để AI tạo nội dung cho bạn!
+                </p>
+            </div>
+
+            <br>
+
+            <!-- YouTube Input -->
+            <div>
+                <h2 class="text-xl mb-4 font-semibold">Enter YouTube Video Link</h2>
+                <div class="flex space-x-4">
+                    <input id="youtubeLink" type="url" placeholder="Paste YouTube Link..." class="flex-grow p-2 border border-blue-400 rounded-l-md">
+                    <button id="generateBlogButton" class="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition-colors">Generate</button>
+                    <button id="cancelGenerateButton" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors hidden">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Loading Animation -->
+            <div style="display: none;" id="loading-circle" class="load"></div>
+
+            <!-- Generated Blog Section -->
+            <section class="mt-10 flex-grow">
+                <h2 class="text-xl mb-4 font-semibold">Generated Blog Article</h2>
+                <div id="blogContent" class="mt-2 text-gray-700 space-y-4"></div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center p-6 text-white mt-1">
+        <h2>Created by TranCuong</h2>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Particles.js Config
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 80, "density": { "enable": true, "value_area": 800 }},
+                "color": { "value": "#ffffff" },
+                "shape": { "type": "circle", "polygon": { "nb_sides": 5 }},
+                "opacity": { "value": 0.5, "anim": { "enable": false }},
+                "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+                "move": { "enable": true, "speed": 6, "direction": "none" }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }},
+                "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 }}}
+            },
+            "retina_detect": true
+        });
+        
+        // Blog Generation Function
+        document.getElementById('generateBlogButton').addEventListener('click', async () => {
+            
+
+            const youtubeLink = document.getElementById('youtubeLink').value;
+            const blogContent = document.getElementById('blogContent');
+            
+            if(youtubeLink) {
+                document.getElementById('loading-circle').style.display = 'block';
+                
+                blogContent.innerHTML = ''; // Clear previous content
+
+                const endpointUrl = "{% url 'blog_generator:generate_blog' %}";
+                
+                try {
+                    const response = await fetch(endpointUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ link: youtubeLink })
+                    });
+                
+                    const data = await response.json();
+                
+                    blogContent.innerHTML = (data.content && data.content !== "undefined") 
+                        ? data.content 
+                        : `<p class="text-red-500 font-semibold">Your path is wrong.</p>`;
+                
+                } catch (error) {
+                    console.error("Error occurred:", error);
+                    blogContent.innerHTML = `<p class="text-red-500 font-semibold">Đã xảy ra lỗi. Vui lòng thử lại sau.</p>`;
+                }
+                
+                document.getElementById('loading-circle').style.display = 'none';
+            } else {
+                alert("Please enter a YouTube link.");
+            }
+        });
+    </script>
+</div>
+
+{% endblock %}
